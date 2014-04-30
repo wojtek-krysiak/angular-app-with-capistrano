@@ -9,7 +9,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box_url  = 'http://files.vagrantup.com/precise64.box'
 
   config.berkshelf.enabled = true #setup berkshelf as cookbooks provider
-  config.vm.network :forwarded_port, host: 4569, guest: 3000
+  config.vm.network :forwarded_port, host: 4569, guest: 9000
   config.vm.synced_folder ".", "/vagrant", nfs: true
   config.vm.network "private_network", ip: "192.168.50.4" #has to be added to nfs to work (with example ip)
 
