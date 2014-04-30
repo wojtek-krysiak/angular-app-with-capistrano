@@ -1,14 +1,14 @@
 # config valid only for Capistrano 3.1
 lock '3.2.1'
 
-set :application, 'my_app_name'
-set :repo_url, 'git@example.com:me/my_repo.git'
+set :application, 'angular-capistrano'
+set :repo_url, 'git@github.com:wojtek-krysiak/angular-capistrano.git'
 
 # Default branch is :master
 # ask :branch, proc { `git rev-parse --abbrev-ref HEAD`.chomp }.call
 
 # Default deploy_to directory is /var/www/my_app
-# set :deploy_to, '/var/www/my_app'
+set :deploy_to, '/home/deploy/angular_capistran'
 
 # Default value for :scm is :git
 # set :scm, :git
@@ -26,10 +26,15 @@ set :repo_url, 'git@example.com:me/my_repo.git'
 # set :linked_files, %w{config/database.yml}
 
 # Default value for linked_dirs is []
-# set :linked_dirs, %w{bin log tmp/pids tmp/cache tmp/sockets vendor/bundle public/system}
+set :linked_dirs, %w{node_modules app/bower_components}
 
-# Default value for default_env is {}
-# set :default_env, { path: "/opt/ruby/bin:$PATH" }
+set :default_env, { 
+  path: ["/usr/local/rbenv/shims",
+    "#{shared_path}/node_modules/bower/bin", 
+    "#{shared_path}/node_modules/grunt-cli/bin",
+    "/usr/local/rbenv/versions/#{fetch(:rbenv_ruby)}/bin",
+    "$PATH"].join(":")
+}
 
 # Default value for keep_releases is 5
 # set :keep_releases, 5
@@ -39,20 +44,28 @@ namespace :deploy do
   desc 'Restart application'
   task :restart do
     on roles(:app), in: :sequence, wait: 5 do
-      # Your restart mechanism here, for example:
-      # execute :touch, release_path.join('tmp/restart.txt')
+      
     end
   end
 
+  task :bower_and_npm_install do 
+    on roles(:app), in: :sequence, wait: 5 do
+      within release_path do 
+        execute :npm, "install"
+        execute :bower, "install"
+      end
+    end
+  end
+
+  task :build do 
+    on roles(:app), in: :sequence, wait: 5 do 
+      within release_path do 
+        execute :grunt, "build"
+      end
+    end
+  end
+  
+  after :bower_and_npm_install, :build
   after :publishing, :restart
-
-  after :restart, :clear_cache do
-    on roles(:web), in: :groups, limit: 3, wait: 10 do
-      # Here we can do anything such as:
-      # within release_path do
-      #   execute :rake, 'cache:clear'
-      # end
-    end
-  end
-
+  after :published, :bower_and_npm_install
 end
