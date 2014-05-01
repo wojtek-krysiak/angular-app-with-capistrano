@@ -51,6 +51,9 @@ namespace :deploy do
   task :bower_and_npm_install do 
     on roles(:app), in: :sequence, wait: 5 do
       within release_path do 
+        unless test "[ -d #{File.join(current_path, 'node_modules', 'grunt-cli', 'bin')} ]"
+          execute :npm, "install yo"
+        end
         execute :npm, "install"
         execute :bower, "install"
       end
